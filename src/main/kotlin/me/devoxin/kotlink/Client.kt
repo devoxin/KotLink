@@ -25,7 +25,7 @@ class Client(
 
     fun addNode(config: NodeConfig) {
         if (!regions.containsKey(config.region)) {
-            throw NodeException("$config.region is not a valid region!")
+            throw NodeException("${config.region} is not a valid region!")
         }
 
         val headers = hashMapOf(
