@@ -14,6 +14,7 @@ dependencies {
     compile "org.json:json:20180130"
     compile "org.java-websocket:Java-WebSocket:1.3.8"
     compileOnly 'net.dv8tion:JDA:3.8.1_438'
+    compile 'com.squareup.okhttp3:okhttp:3.13.1'
 }
 
 compileKotlin {

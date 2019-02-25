@@ -3,24 +3,23 @@ package me.devoxin.kotlink
 import org.java_websocket.client.WebSocketClient
 import org.java_websocket.drafts.Draft
 import org.java_websocket.handshake.ServerHandshake
+import org.json.JSONObject
 
 import java.net.InetSocketAddress
 import java.net.URI
 
 abstract class ReusableWebSocket(
-    val serverUri: URI,
+    private val serverUri: URI,
     private val draft: Draft,
     private val headers: Map<String, String>,
     private val connectTimeout: Int
 ) {
 
     private var socket: DisposableSocket? = null
-    private val instance = this // For use in inner class
     private var isUsed = false
 
-    //will return null if there is no connection
-    val remoteSocketAddress: InetSocketAddress
-        get() = socket!!.remoteSocketAddress
+    val remoteSocketAddress: InetSocketAddress?
+        get() = socket?.remoteSocketAddress
 
     val isOpen: Boolean
         get() = socket != null && socket!!.isOpen
@@ -43,13 +42,18 @@ abstract class ReusableWebSocket(
     abstract fun onError(ex: Exception)
 
     fun send(text: String) {
-        if (socket != null && socket!!.isOpen) {
+        if (isOpen) {
             socket!!.send(text)
         }
     }
 
+    fun send(json: JSONObject) = send(json.toString())
+
     fun connect() {
-        if (socket == null || isUsed) socket = DisposableSocket(serverUri, draft, headers, connectTimeout)
+        if (socket == null || isUsed) {
+            socket = DisposableSocket(serverUri, draft, headers, connectTimeout)
+        }
+
         socket!!.connect()
         isUsed = true
     }
@@ -61,17 +65,11 @@ abstract class ReusableWebSocket(
         isUsed = true
     }
 
-    fun close() {
-        socket?.close()
-    }
+    fun close() = socket?.close()
 
-    fun close(code: Int) {
-        socket?.close(code)
-    }
+    fun close(code: Int) = socket?.close(code)
 
-    fun close(code: Int, reason: String) {
-        socket?.close(code, reason)
-    }
+    fun close(code: Int, reason: String) = socket?.close(code, reason)
 
     private inner class DisposableSocket internal constructor(
         serverUri: URI,
@@ -85,19 +83,19 @@ abstract class ReusableWebSocket(
         }
 
         override fun onOpen(handshakedata: ServerHandshake) {
-            instance.onOpen(handshakedata)
+            this@ReusableWebSocket.onOpen(handshakedata)
         }
 
         override fun onMessage(message: String) {
-            instance.onMessage(message)
+            this@ReusableWebSocket.onMessage(message)
         }
 
         override fun onClose(code: Int, reason: String, remote: Boolean) {
-            instance.onClose(code, reason, remote)
+            this@ReusableWebSocket.onClose(code, reason, remote)
         }
 
         override fun onError(ex: Exception) {
-            instance.onError(ex)
+            this@ReusableWebSocket.onError(ex)
         }
     }
 

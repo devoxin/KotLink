@@ -6,25 +6,25 @@ import java.net.URI
 
 class Node(
     private val client: Client,
-    public val name: String,
-    public val region: String,
-
-    public val srvUri: URI,
+    public val config: NodeConfig,
     public val headers: HashMap<String, String>
+) : ReusableWebSocket(URI("ws://${config.address}:${config.wsPort}"), Draft_6455(), headers, 5000) {
 
-) : ReusableWebSocket(srvUri, Draft_6455(), headers, 5000) {
+    public val available
+        get() = this.isOpen && !this.isClosing
 
-    public var available: Boolean = false
-        private set
-
+    public val restUrl = "http://${config.address}:${config.restPort}"
 
     override fun onClose(code: Int, reason: String, remote: Boolean) {
+
     }
 
     override fun onError(ex: Exception) {
+        throw NodeException(ex.localizedMessage) // todo log
     }
 
     override fun onMessage(message: String) {
+        println(message)
     }
 
     override fun onOpen(handshakeData: ServerHandshake) {
