@@ -2,7 +2,6 @@ package me.devoxin.kotlink
 
 import me.devoxin.kotlink.entities.AudioResult
 import me.devoxin.kotlink.entities.AudioTrack
-import me.devoxin.kotlink.entities.LoadResult
 import okhttp3.*
 import org.json.JSONObject
 import org.slf4j.LoggerFactory
