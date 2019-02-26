@@ -4,6 +4,7 @@ import org.java_websocket.client.WebSocketClient
 import org.java_websocket.drafts.Draft
 import org.java_websocket.handshake.ServerHandshake
 import org.json.JSONObject
+import org.slf4j.LoggerFactory
 
 import java.net.InetSocketAddress
 import java.net.URI
@@ -100,7 +101,7 @@ abstract class ReusableWebSocket(
     }
 
     companion object {
-        //private val log = LoggerFactory.getLogger(ReusableWebSocket::class.java)
+        private val LOG = LoggerFactory.getLogger(ReusableWebSocket::class.java)
     }
 
 }
