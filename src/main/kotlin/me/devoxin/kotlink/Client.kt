@@ -1,5 +1,6 @@
 package me.devoxin.kotlink
 
+import me.devoxin.kotlink.entities.AudioPlayer
 import me.devoxin.kotlink.entities.AudioResult
 import me.devoxin.kotlink.entities.AudioTrack
 import okhttp3.*
@@ -26,6 +27,7 @@ class Client(
 
     public val regions = customRegions ?: defaultRegions
     public val nodes = mutableListOf<Node>()
+    public val players = hashMapOf<Long, AudioPlayer>()
 
     fun addNode(config: NodeConfig) {
         if (!regions.containsKey(config.region)) {
@@ -43,6 +45,11 @@ class Client(
         nodes.add(node)
     }
 
+    fun getPlayer(guildId: Long): AudioPlayer {
+        return players.computeIfAbsent(guildId) {
+            AudioPlayer(this, it, nodes.first())
+        }
+    }
 
     /**
      * Sends a search request to the given node if provided, otherwise a random node.
@@ -70,7 +77,7 @@ class Client(
         val future = CompletableFuture<AudioResult>()
 
         val encodedQuery = URLEncoder.encode(query, Charset.defaultCharset())
-        val url = "${targetNode.restUrl}/loadTracks?identifier=$encodedQuery"
+        val url = "${targetNode.restUrl}/loadtracks?identifier=$encodedQuery"
 
         val req = Request.Builder()
             .url(url)
