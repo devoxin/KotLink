@@ -50,7 +50,7 @@ class Client(
 
         return if (player == null && create) {
             players.computeIfAbsent(guildId) {
-                AudioPlayer(this, it, nodes.first())
+                AudioPlayer(this, nodes.first(), it)
             }
         } else {
             player

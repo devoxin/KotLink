@@ -5,16 +5,25 @@ import me.devoxin.kotlink.Node
 import org.json.JSONObject
 
 class AudioPlayer(
-    private val client: Client,
-    public val guildId: Long,
-    public val node: Node
+    public val client: Client,
+    public val node: Node,
+    public val guildId: Long
 ) {
 
-    private val lastSessionId: String? = null
-    private val channelId: Long? = null
     private var voiceUpdate = JSONObject()
+    public var channelId: Long? = null
+        private set
 
-    fun handleVoiceServerUpdate(endpoint: String, token: String) {
+    public fun play(track: AudioTrack) {
+        val payload = JSONObject(mapOf(
+            "op" to "play",
+            "guildId" to guildId.toString(),
+            "track" to track.track
+        ))
+        node.send(payload)
+    }
+
+    internal fun handleVoiceServerUpdate(endpoint: String, token: String) {
         voiceUpdate.put("event", JSONObject(mapOf(
             "guild_id" to guildId.toString(),
             "token" to token,
@@ -23,28 +32,23 @@ class AudioPlayer(
         checkAndDispatch()
     }
 
-    fun handleVoiceStateUpdate(sessionId: String) {
-        println(voiceUpdate)
-        voiceUpdate.put("sessionId", sessionId)
-        checkAndDispatch()
+    internal fun handleVoiceStateUpdate(channelId: Long?, sessionId: String) {
+        this.channelId = channelId
+
+        if (channelId != null) {
+            voiceUpdate.put("sessionId", sessionId)
+            checkAndDispatch()
+        } else {
+            voiceUpdate = JSONObject()
+        }
     }
 
-    fun checkAndDispatch() {
+    private fun checkAndDispatch() {
         if (voiceUpdate.has("event") && voiceUpdate.has("sessionId")) {
             voiceUpdate.put("op", "voiceUpdate")
             voiceUpdate.put("guildId", guildId.toString())
             node.send(voiceUpdate)
-            //voiceUpdate = JSONObject()
         }
-    }
-
-    fun play(track: AudioTrack) {
-        val payload = JSONObject(mapOf(
-            "op" to "play",
-            "guildId" to guildId.toString(),
-            "track" to track.track
-        ))
-        node.send(payload)
     }
 
 }
