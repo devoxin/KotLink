@@ -45,9 +45,15 @@ class Client(
         nodes.add(node)
     }
 
-    fun getPlayer(guildId: Long): AudioPlayer {
-        return players.computeIfAbsent(guildId) {
-            AudioPlayer(this, it, nodes.first())
+    fun getPlayer(guildId: Long, create: Boolean = false): AudioPlayer? {
+        val player = players[guildId]
+
+        return if (player == null && create) {
+            players.computeIfAbsent(guildId) {
+                AudioPlayer(this, it, nodes.first())
+            }
+        } else {
+            player
         }
     }
 
@@ -58,8 +64,10 @@ class Client(
      * @returns List<AudioTrack>
      */
     fun getTracks(query: String, node: Node? = null): CompletableFuture<AudioResult> {
+        val future = CompletableFuture<AudioResult>()
+
         if (node != null && !node.available) {
-            throw Error("Provided node is not available!")
+            future.completeExceptionally(Error("Provided node is not available!"))
         }
 
         val targetNode = if (node != null) {
@@ -68,16 +76,19 @@ class Client(
             val availableNodes = nodes.filter { it.available }
 
             if (availableNodes.isEmpty()) {
-                throw Error("No available nodes!")
+                future.completeExceptionally(Error("No available nodes!"))
+                null
+            } else {
+                availableNodes.random()
             }
-
-            availableNodes.random()
         }
 
-        val future = CompletableFuture<AudioResult>()
+        if (future.isCompletedExceptionally) {
+            return future
+        }
 
         val encodedQuery = URLEncoder.encode(query, Charset.defaultCharset())
-        val url = "${targetNode.restUrl}/loadtracks?identifier=$encodedQuery"
+        val url = "${targetNode!!.restUrl}/loadtracks?identifier=$encodedQuery"
 
         val req = Request.Builder()
             .url(url)
