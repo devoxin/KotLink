@@ -1,11 +1,12 @@
 package me.devoxin.kotlink
 
+import me.devoxin.kotlink.entities.IAudioPlayer
 import org.java_websocket.drafts.Draft_6455
 import org.java_websocket.handshake.ServerHandshake
 import java.net.URI
 
 class Node(
-    private val client: Client,
+    private val client: Client<*>,
     public val config: NodeConfig,
     public val headers: HashMap<String, String>
 ) : ReusableWebSocket(URI("ws://${config.address}:${config.wsPort}"), Draft_6455(), headers, 5000) {
