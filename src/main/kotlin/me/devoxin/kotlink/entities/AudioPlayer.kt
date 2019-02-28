@@ -10,15 +10,22 @@ class AudioPlayer(
     public val node: Node
 ) {
 
+    private val lastSessionId: String? = null
+    private val channelId: Long? = null
     private var voiceUpdate = JSONObject()
 
-    fun handleVoiceServerUpdate(content: JSONObject) {
-        voiceUpdate.put("event", content)
+    fun handleVoiceServerUpdate(endpoint: String, token: String) {
+        voiceUpdate.put("event", JSONObject(mapOf(
+            "guild_id" to guildId.toString(),
+            "token" to token,
+            "endpoint" to endpoint
+        )))
         checkAndDispatch()
     }
 
-    fun handleVoiceStateUpdate(content: JSONObject) {
-        voiceUpdate.put("sessionId", content.getString("session_id"))
+    fun handleVoiceStateUpdate(sessionId: String) {
+        println(voiceUpdate)
+        voiceUpdate.put("sessionId", sessionId)
         checkAndDispatch()
     }
 
@@ -27,14 +34,13 @@ class AudioPlayer(
             voiceUpdate.put("op", "voiceUpdate")
             voiceUpdate.put("guildId", guildId.toString())
             node.send(voiceUpdate)
-            voiceUpdate = JSONObject()
+            //voiceUpdate = JSONObject()
         }
     }
 
     fun play(track: AudioTrack) {
         val payload = JSONObject(mapOf(
             "op" to "play",
-
             "guildId" to guildId.toString(),
             "track" to track.track
         ))
