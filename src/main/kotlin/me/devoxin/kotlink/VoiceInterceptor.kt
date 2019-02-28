@@ -1,9 +1,8 @@
 package me.devoxin.kotlink
 
-import me.devoxin.kotlink.entities.AudioPlayer
 import net.dv8tion.jda.api.hooks.VoiceDispatchInterceptor
 
-class VoiceInterceptor(private val client: Client<AudioPlayer>) : VoiceDispatchInterceptor {
+class VoiceInterceptor(private val client: Client) : VoiceDispatchInterceptor {
 
     override fun onVoiceServerUpdate(update: VoiceDispatchInterceptor.VoiceServerUpdate) {
         val guildId = update.guildIdLong
