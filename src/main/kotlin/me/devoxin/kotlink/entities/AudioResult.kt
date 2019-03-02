@@ -1,17 +1,10 @@
 package me.devoxin.kotlink.entities
 
-class AudioResult(
+data class AudioResult(
     val loadResult: String,
-    val name: String?,
-    val selectedIndex: Int?,
+    val playlistInfo: PlaylistInfo,
     val tracks: List<AudioTrack>
-) {
-
-    companion object {
-        fun empty(result: String): AudioResult = AudioResult(result, null, null, emptyList())
-    }
-
-}
+)
 
 /**
  * Load Results:
