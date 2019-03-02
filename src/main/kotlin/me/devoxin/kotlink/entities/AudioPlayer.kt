@@ -14,6 +14,9 @@ class AudioPlayer(
     public var channelId: Long? = null
         private set
 
+    public var current: AudioTrack? = null
+        private set
+
     public fun play(track: AudioTrack) {
         val payload = JSONObject(mapOf(
             "op" to "play",
@@ -21,7 +24,23 @@ class AudioPlayer(
             "track" to track.track
         ))
         node.send(payload)
+
+        current = track
     }
+
+    public fun seek(milliseconds: Long) {
+        val payload = JSONObject(mapOf(
+            "op" to "seek",
+            "guildId" to guildId.toString(),
+            "position" to milliseconds // TODO: Checks
+        ))
+        node.send(payload)
+    }
+
+
+    // +-----------------------------+
+    // | Boring voice handling stuff |
+    // +-----------------------------+
 
     internal fun handleVoiceServerUpdate(endpoint: String, token: String) {
         voiceUpdate.put("event", JSONObject(mapOf(

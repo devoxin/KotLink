@@ -3,6 +3,7 @@ package me.devoxin.kotlink
 import me.devoxin.kotlink.entities.AudioPlayer
 import me.devoxin.kotlink.entities.AudioResult
 import me.devoxin.kotlink.entities.AudioTrack
+import me.devoxin.kotlink.entities.PlaylistInfo
 import okhttp3.*
 import org.json.JSONObject
 import org.slf4j.LoggerFactory
@@ -63,8 +64,8 @@ class Client(
      * @param node The node to perform the search on. Can be omitted to use a random node.
      * @returns List<AudioTrack>
      */
-    fun getTracks(query: String, node: Node? = null): CompletableFuture<AudioResult> {
-        val future = CompletableFuture<AudioResult>()
+    fun getTracks(query: String, node: Node? = null): CompletableFuture<AudioResult?> {
+        val future = CompletableFuture<AudioResult?>()
 
         if (node != null && !node.available) {
             future.completeExceptionally(Error("Provided node is not available!"))
@@ -100,7 +101,7 @@ class Client(
         httpClient.newCall(req).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
                 LOG.error("Failed to retrieve tracks from node ${targetNode.config.name}", e)
-                future.complete(AudioResult.empty("UNKNOWN"))
+                future.complete(null)
             }
 
             override fun onResponse(call: Call, response: Response) {
@@ -108,36 +109,20 @@ class Client(
                 val body = response.body()
 
                 if (!response.isSuccessful || body == null) {
-                    future.complete(AudioResult.empty("UNKNOWN"))
+                    future.complete(null) // completeExceptionally
                     return
                 }
 
                 val json = JSONObject(body.string())
                 val loadResult = json.getString("loadType")
+                val playlistInfo = PlaylistInfo(json.getJSONObject("playlistInfo"))
                 val trackList = mutableListOf<AudioTrack>()
 
                 json.getJSONArray("tracks").forEach {
                     trackList.add(AudioTrack(it as JSONObject))
                 }
 
-                when (loadResult) {
-                    "TRACK_LOADED" -> future.complete(
-                        AudioResult(loadResult, null, null, trackList)
-                    )
-                    "PLAYLIST_LOADED" -> {
-                        val playlistInfo = json.getJSONObject("playlistInfo")
-                        val name = playlistInfo.getString("name")
-                        val selectedTrack = playlistInfo.getInt("selectedTrack")
-                        future.complete(
-                            AudioResult(loadResult, name, selectedTrack, trackList)
-                        )
-                    }
-                    "SEARCH_RESULT" -> future.complete(
-                        AudioResult(loadResult, null, null, trackList)
-                    )
-                    "NO_MATCHES" -> future.complete(AudioResult.empty(loadResult))
-                    "LOAD_FAILED" -> future.complete(AudioResult.empty(loadResult))
-                }
+                future.complete(AudioResult(loadResult, playlistInfo, trackList))
             }
         })
 
