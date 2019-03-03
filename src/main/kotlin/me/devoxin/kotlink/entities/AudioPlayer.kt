@@ -1,14 +1,16 @@
 package me.devoxin.kotlink.entities
 
-import me.devoxin.kotlink.Client
+import me.devoxin.kotlink.LavalinkClient
 import me.devoxin.kotlink.Node
 import org.json.JSONObject
 
 class AudioPlayer(
-    public val client: Client,
+    public val client: LavalinkClient,
     public val node: Node,
     public val guildId: Long
 ) {
+
+    private var eventHook: IEventHook? = null
 
     private var voiceUpdate = JSONObject()
     public var channelId: Long? = null
@@ -16,6 +18,15 @@ class AudioPlayer(
 
     public var current: AudioTrack? = null
         private set
+
+    public fun setListener(hook: IEventHook) {
+        eventHook = hook
+    }
+
+
+    // +-------------------------+
+    // | Actual player functions |
+    // +-------------------------+
 
     public fun play(track: AudioTrack) {
         val payload = JSONObject(mapOf(
@@ -35,6 +46,27 @@ class AudioPlayer(
             "position" to milliseconds // TODO: Checks
         ))
         node.send(payload)
+    }
+
+
+    // +-----------------------------+
+    // | Boring event handling stuff |
+    // +-----------------------------+
+
+    internal fun onTrackStart(track: AudioTrack) {
+        eventHook?.onTrackStart(this, track)
+    }
+
+    internal fun onTrackEnd(/*track: AudioTrack,*/ reason: String) {
+        eventHook?.onTrackEnd(this, current!!, reason)
+    }
+
+    internal fun onTrackStuck(track: AudioTrack, threshold: Long) {
+        eventHook?.onTrackStuck(this, track, threshold)
+    }
+
+    internal fun onTrackException(track: AudioTrack, exception: String) {
+        eventHook?.onTrackException(this, track, exception)
     }
 
 

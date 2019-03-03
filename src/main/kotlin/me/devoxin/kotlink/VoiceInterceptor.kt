@@ -2,7 +2,7 @@ package me.devoxin.kotlink
 
 import net.dv8tion.jda.api.hooks.VoiceDispatchInterceptor
 
-class VoiceInterceptor(private val client: Client) : VoiceDispatchInterceptor {
+class VoiceInterceptor(private val client: LavalinkClient) : VoiceDispatchInterceptor {
 
     override fun onVoiceServerUpdate(update: VoiceDispatchInterceptor.VoiceServerUpdate) {
         val guildId = update.guildIdLong

@@ -1,13 +1,11 @@
 package me.devoxin.kotlink
 
-import org.json.JSONObject
+import me.devoxin.kotlink.entities.AudioTrack
 
 object Util {
 
-    /*
-    public fun toAudioTrack(data: JSONObject): AudioTrack {
+    //public fun toAudioTrack(base64: String): AudioTrack {
 
-    }
-    */
+    //}
 
 }

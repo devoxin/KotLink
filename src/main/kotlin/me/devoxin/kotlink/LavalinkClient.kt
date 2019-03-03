@@ -12,13 +12,13 @@ import java.net.URLEncoder
 import java.nio.charset.Charset
 import java.util.concurrent.CompletableFuture
 
-class Client(
+class LavalinkClient(
     public val userId: String,
     public val shardCount: Int,
     customRegions: HashMap<String, Array<String>>? = null
 ) {
 
-    private val LOG = LoggerFactory.getLogger(Client::class.java)
+    private val LOG = LoggerFactory.getLogger(LavalinkClient::class.java)
     private val httpClient = OkHttpClient()
     private val defaultRegions = hashMapOf(
         "asia" to arrayOf("hongkong", "singapore", "sydney", "japan", "southafrica"),
@@ -46,6 +46,12 @@ class Client(
         nodes.add(node)
     }
 
+    /**
+     * Gets a AudioPlayer used for controlling music playback.
+     * @param guildId The guildId the player should belong to.
+     * @param create Whether to create the player if one doesn't exist.
+     * @return AudioPlayer
+     */
     fun getPlayer(guildId: Long, create: Boolean = false): AudioPlayer? {
         val player = players[guildId]
 
@@ -62,7 +68,7 @@ class Client(
      * Sends a search request to the given node if provided, otherwise a random node.
      * @param query The query to search for.
      * @param node The node to perform the search on. Can be omitted to use a random node.
-     * @returns List<AudioTrack>
+     * @returns AudioResult
      */
     fun getTracks(query: String, node: Node? = null): CompletableFuture<AudioResult?> {
         val future = CompletableFuture<AudioResult?>()
