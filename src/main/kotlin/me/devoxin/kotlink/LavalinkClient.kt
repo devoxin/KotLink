@@ -49,18 +49,13 @@ class LavalinkClient(
     /**
      * Gets a AudioPlayer used for controlling music playback.
      * @param guildId The guildId the player should belong to.
-     * @param create Whether to create the player if one doesn't exist.
      * @return AudioPlayer
      */
-    fun getPlayer(guildId: Long, create: Boolean = false): AudioPlayer? {
-        val player = players[guildId]
+    fun getPlayer(guildId: Long) = players[guildId]
 
-        return if (player == null && create) {
-            players.computeIfAbsent(guildId) {
-                AudioPlayer(this, nodes.first(), it)
-            }
-        } else {
-            player
+    fun createPlayer(guildId: Long): AudioPlayer {
+        return players.computeIfAbsent(guildId) {
+            AudioPlayer(this, nodes.first(), guildId)
         }
     }
 
