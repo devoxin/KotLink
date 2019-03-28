@@ -34,9 +34,11 @@ class AudioPlayer(
             "guildId" to guildId.toString(),
             "track" to track.track
         ))
-        node.send(payload)
 
+        node.send(payload)
         current = track
+
+        onTrackStart(track)
     }
 
     public fun seek(milliseconds: Long) {
@@ -57,17 +59,21 @@ class AudioPlayer(
         eventHook?.onTrackStart(this, track)
     }
 
-    internal fun onTrackEnd(/*track: AudioTrack,*/ reason: String) {
+    internal fun onTrackEnd(reason: String) {
         eventHook?.onTrackEnd(this, current!!, reason)
     }
 
-    internal fun onTrackStuck(track: AudioTrack, threshold: Long) {
-        eventHook?.onTrackStuck(this, track, threshold)
+    internal fun onTrackStuck(thresholdMs: Long) {
+        eventHook?.onTrackStuck(this, current!!, thresholdMs)
     }
 
-    internal fun onTrackException(track: AudioTrack, exception: String) {
-        eventHook?.onTrackException(this, track, exception)
+    internal fun onTrackException(exception: String) {
+        eventHook?.onTrackException(this, current!!, exception)
     }
+
+    // see Node.kt "handleEvent" for reasons why I use current. also tbh
+    // I don't see any other cases where the track the event was emitted for
+    // is not actually the currently playing one, like ?????? how would that work
 
 
     // +-----------------------------+

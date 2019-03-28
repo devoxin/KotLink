@@ -68,8 +68,8 @@ class LavalinkClient(
      * @param node The node to perform the search on. Can be omitted to use a random node.
      * @returns AudioResult
      */
-    fun getTracks(query: String, node: Node? = null): CompletableFuture<AudioResult?> {
-        val future = CompletableFuture<AudioResult?>()
+    fun getTracks(query: String, node: Node? = null): CompletableFuture<AudioResult> {
+        val future = CompletableFuture<AudioResult>()
 
         if (node != null && !node.available) {
             future.completeExceptionally(Error("Provided node is not available!"))
@@ -95,7 +95,7 @@ class LavalinkClient(
         httpClient.newCall(req).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
                 log.error("Failed to retrieve tracks from node ${targetNode.config.name}", e)
-                future.complete(null)
+                future.completeExceptionally(e)
             }
 
             override fun onResponse(call: Call, response: Response) {
