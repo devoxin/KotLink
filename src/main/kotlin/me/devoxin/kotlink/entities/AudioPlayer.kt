@@ -3,6 +3,7 @@ package me.devoxin.kotlink.entities
 import me.devoxin.kotlink.LavalinkClient
 import me.devoxin.kotlink.Node
 import org.json.JSONObject
+import kotlin.math.min
 
 class AudioPlayer(
     public val client: LavalinkClient,
@@ -18,6 +19,34 @@ class AudioPlayer(
 
     public var current: AudioTrack? = null
         private set
+
+    public var paused = false
+        private set
+
+    private var lastUpdate = 0L
+    public var position = 0L
+        private set
+        get() {
+            if (!playing) {
+                return 0L
+            }
+
+            if (paused) {
+                return min(field, current!!.length)
+            }
+
+            val difference = System.currentTimeMillis() - lastUpdate
+            return min(field + difference, current!!.length)
+        }
+
+    public val playing: Boolean
+        get() = channelId != null && current != null
+
+
+    internal fun handleStateUpdate(data: JSONObject) {
+        lastUpdate = System.currentTimeMillis()
+        position = data.optLong("position", 0)
+    }
 
     public fun setListener(hook: IEventHook) {
         eventHook = hook
