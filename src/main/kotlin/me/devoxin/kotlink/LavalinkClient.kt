@@ -18,7 +18,7 @@ class LavalinkClient(
     customRegions: HashMap<String, Array<String>>? = null
 ) {
 
-    private val LOG = LoggerFactory.getLogger(LavalinkClient::class.java)
+    private val log = LoggerFactory.getLogger(LavalinkClient::class.java)
     private val httpClient = OkHttpClient()
     private val defaultRegions = hashMapOf(
         "asia" to arrayOf("hongkong", "singapore", "sydney", "japan", "southafrica"),
@@ -30,12 +30,15 @@ class LavalinkClient(
     public val nodes = mutableListOf<Node>()
     public val players = hashMapOf<Long, AudioPlayer>()
 
+    public val availableNodes: List<Node>
+        get() = nodes.filter { it.available }
+
     fun addNode(config: NodeConfig) {
         if (!regions.containsKey(config.region)) {
             throw NodeException("${config.region} is not a valid region!")
         }
 
-        val headers = hashMapOf(
+        val headers = mapOf(
             "Authorization" to config.password,
             "Num-Shards" to shardCount.toString(),
             "User-Id" to userId
@@ -70,47 +73,39 @@ class LavalinkClient(
 
         if (node != null && !node.available) {
             future.completeExceptionally(Error("Provided node is not available!"))
+            return future
         }
 
-        val targetNode = if (node != null) {
-            node
-        } else {
-            val availableNodes = nodes.filter { it.available }
+        val targetNode = node ?: Util.randomOrNull(availableNodes)
 
-            if (availableNodes.isEmpty()) {
-                future.completeExceptionally(Error("No available nodes!"))
-                null
-            } else {
-                availableNodes.random()
-            }
-        }
-
-        if (future.isCompletedExceptionally) {
+        if (targetNode == null) {
+            future.completeExceptionally(Error("get some better nodes cuck"))
             return future
         }
 
         val encodedQuery = URLEncoder.encode(query, Charset.defaultCharset())
-        val url = "${targetNode!!.restUrl}/loadtracks?identifier=$encodedQuery"
 
         val req = Request.Builder()
-            .url(url)
+            .url("${targetNode.restUrl}/loadtracks?identifier=$encodedQuery")
             .header("Authorization", targetNode.config.password)
             .build()
 
-        LOG.debug("[<-] Requesting tracks from node ${targetNode.config.name}")
+        log.debug("[<-] Requesting tracks from node ${targetNode.config.name}")
 
         httpClient.newCall(req).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
-                LOG.error("Failed to retrieve tracks from node ${targetNode.config.name}", e)
+                log.error("Failed to retrieve tracks from node ${targetNode.config.name}", e)
                 future.complete(null)
             }
 
             override fun onResponse(call: Call, response: Response) {
-                LOG.debug("[->] Response from node ${targetNode.config.name} with status code ${response.code()}")
+                log.debug("[->] Response from node ${targetNode.config.name} with status code ${response.code()}")
                 val body = response.body()
 
                 if (!response.isSuccessful || body == null) {
-                    future.complete(null) // completeExceptionally
+                    future.completeExceptionally(
+                        Error("Invalid loadtracks response: ${response.code()} - ${response.message()}")
+                    )
                     return
                 }
 
@@ -119,8 +114,8 @@ class LavalinkClient(
                 val playlistInfo = PlaylistInfo(json.getJSONObject("playlistInfo"))
                 val trackList = mutableListOf<AudioTrack>()
 
-                json.getJSONArray("tracks").forEach {
-                    trackList.add(AudioTrack(it as JSONObject))
+                for (track in json.getJSONArray("tracks")) {
+                    trackList.add(AudioTrack(track as JSONObject))
                 }
 
                 future.complete(AudioResult(loadResult, playlistInfo, trackList))
