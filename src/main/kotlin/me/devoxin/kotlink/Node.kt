@@ -9,7 +9,7 @@ import java.net.URI
 class Node(
     private val client: LavalinkClient,
     public val config: NodeConfig,
-    public val headers: HashMap<String, String>
+    public val headers: Map<String, String>
 ) : ReusableWebSocket(URI("ws://${config.address}:${config.wsPort}"), Draft_6455(), headers, 5000) {
 
     public val available
