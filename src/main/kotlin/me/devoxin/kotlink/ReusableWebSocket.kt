@@ -51,6 +51,10 @@ abstract class ReusableWebSocket(
     fun send(json: JSONObject) = send(json.toString())
 
     fun connect() {
+        if (isOpen) {
+            return
+        }
+
         if (socket == null || isUsed) {
             socket = DisposableSocket(serverUri, draft, headers, connectTimeout)
         }
@@ -98,10 +102,6 @@ abstract class ReusableWebSocket(
         override fun onError(ex: Exception) {
             this@ReusableWebSocket.onError(ex)
         }
-    }
-
-    companion object {
-        private val LOG = LoggerFactory.getLogger(ReusableWebSocket::class.java)
     }
 
 }
