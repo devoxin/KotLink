@@ -115,7 +115,7 @@ class LavalinkClient(
                 val trackList = mutableListOf<AudioTrack>()
 
                 for (track in json.getJSONArray("tracks")) {
-                    trackList.add(AudioTrack(track as JSONObject))
+                    trackList.add(AudioTrack.fromJson(track as JSONObject))
                 }
 
                 future.complete(AudioResult(loadResult, playlistInfo, trackList))
