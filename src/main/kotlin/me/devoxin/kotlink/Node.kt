@@ -32,7 +32,6 @@ class Node(
 
     override fun onError(ex: Exception) {
         log.warn("Node ${config.name} encountered an error in the WebSocket", ex)
-        throw NodeException(ex.localizedMessage) // todo log
     }
 
     override fun onMessage(message: String) {
