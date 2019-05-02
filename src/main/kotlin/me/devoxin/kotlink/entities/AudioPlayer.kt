@@ -6,25 +6,25 @@ import org.json.JSONObject
 import kotlin.math.min
 
 class AudioPlayer(
-    public val client: LavalinkClient,
-    public val node: Node,
-    public val guildId: Long
+    val client: LavalinkClient,
+    val node: Node,
+    val guildId: Long
 ) {
 
     private var eventHook: IEventHook? = null
 
     private var voiceUpdate = JSONObject()
-    public var channelId: Long? = null
+    var channelId: Long? = null
         private set
 
-    public var current: AudioTrack? = null
+    var current: AudioTrack? = null
         private set
 
-    public var paused = false
+    var paused = false
         private set
 
     private var lastUpdate = 0L
-    public var position = 0L
+    var position = 0L
         private set
         get() {
             if (!playing) {
@@ -39,7 +39,7 @@ class AudioPlayer(
             return min(field + difference, current!!.length)
         }
 
-    public val playing: Boolean
+    val playing: Boolean
         get() = channelId != null && current != null
 
 
@@ -48,7 +48,7 @@ class AudioPlayer(
         position = data.optLong("position", 0)
     }
 
-    public fun setListener(hook: IEventHook) {
+    fun setListener(hook: IEventHook) {
         eventHook = hook
     }
 
@@ -57,7 +57,7 @@ class AudioPlayer(
     // | Actual player functions |
     // +-------------------------+
 
-    public fun play(track: AudioTrack) {
+    fun play(track: AudioTrack) {
         val payload = JSONObject(mapOf(
             "op" to "play",
             "guildId" to guildId.toString(),
@@ -70,7 +70,7 @@ class AudioPlayer(
         onTrackStart(track)
     }
 
-    public fun seek(milliseconds: Long) {
+    fun seek(milliseconds: Long) {
         val payload = JSONObject(mapOf(
             "op" to "seek",
             "guildId" to guildId.toString(),

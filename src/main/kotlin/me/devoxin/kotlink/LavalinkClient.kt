@@ -13,24 +13,19 @@ import java.nio.charset.Charset
 import java.util.concurrent.CompletableFuture
 
 class LavalinkClient(
-    public val userId: String,
-    public val shardCount: Int,
-    customRegions: HashMap<String, Array<String>>? = null
+    val userId: String,
+    val shardCount: Int,
+    customRegions: Map<String, Array<String>>? = null
 ) {
 
     private val log = LoggerFactory.getLogger(LavalinkClient::class.java)
     private val httpClient = OkHttpClient()
-    private val defaultRegions = hashMapOf(
-        "asia" to arrayOf("hongkong", "singapore", "sydney", "japan", "southafrica"),
-        "eu" to arrayOf("eu", "amsterdam", "frankfurt", "russia", "london"),
-        "us" to arrayOf("us", "brazil")
-    )
 
-    public val regions = customRegions ?: defaultRegions
-    public val nodes = mutableListOf<Node>()
-    public val players = hashMapOf<Long, AudioPlayer>()
+    val regions = customRegions ?: DEFAULT_REGIONS
+    val nodes = mutableListOf<Node>()
+    val players = hashMapOf<Long, AudioPlayer>()
 
-    public val availableNodes: List<Node>
+    val availableNodes: List<Node>
         get() = nodes.filter { it.available }
 
     fun addNode(config: NodeConfig) {
@@ -51,11 +46,19 @@ class LavalinkClient(
 
     /**
      * Gets a AudioPlayer used for controlling music playback.
-     * @param guildId The guildId the player should belong to.
+     * @param guildId
+     *        The guild id associated with the player.
      * @return AudioPlayer
      */
     fun getPlayer(guildId: Long) = players[guildId]
 
+    /**
+     * Creates an AudioPlayer for the given guildId, if one doesn't exist.
+     * Otherwise, returns the existing player.
+     * @param guildId
+     *        The guild id to associate with the player.
+     * @return AudioPlayer
+     */
     fun createPlayer(guildId: Long): AudioPlayer {
         return players.computeIfAbsent(guildId) {
             AudioPlayer(this, nodes.first(), guildId)
@@ -79,7 +82,7 @@ class LavalinkClient(
         val targetNode = node ?: Util.randomOrNull(availableNodes)
 
         if (targetNode == null) {
-            future.completeExceptionally(Error("get some better nodes cuck"))
+            future.completeExceptionally(NodeException("No available nodes!"))
             return future
         }
 
@@ -123,6 +126,14 @@ class LavalinkClient(
         })
 
         return future
+    }
+
+    companion object {
+        val DEFAULT_REGIONS = mapOf(
+            "asia" to arrayOf("hongkong", "singapore", "sydney", "japan", "southafrica"),
+            "eu" to arrayOf("eu", "amsterdam", "frankfurt", "russia", "london"),
+            "us" to arrayOf("us", "brazil")
+        )
     }
 
 }
