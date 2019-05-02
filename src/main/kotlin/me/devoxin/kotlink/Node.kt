@@ -9,17 +9,16 @@ import java.net.URI
 
 class Node(
     private val client: LavalinkClient,
-    public val config: NodeConfig,
-    public val headers: Map<String, String>
+    val config: NodeConfig,
+    headers: Map<String, String>
 ) : ReusableWebSocket(URI("ws://${config.address}:${config.wsPort}"), Draft_6455(), headers, 10000) {
 
-    public val log = LoggerFactory.getLogger(Node::class.java)!!
+    private val log = LoggerFactory.getLogger(Node::class.java)!!
 
-    public val available
+    val available
         get() = this.isOpen && !this.isClosing
 
-    public val restUrl = "http://${config.address}:${config.restPort}"
-
+    val restUrl = "http://${config.address}:${config.restPort}"
 
     override fun onOpen(handshakeData: ServerHandshake) {
         log.info("Successfully connected to Lavalink node ${config.name}")
@@ -27,7 +26,10 @@ class Node(
 
     override fun onClose(code: Int, reason: String, remote: Boolean) {
         log.warn("Disconnected from node ${config.name} ($code): $reason (By remote: $remote)")
-        this.connect()
+
+        if (remote) { // If close was initialised by the client/user, we shouldn't try to reconnect
+            this.connect() // as the socket would've been closed locally for a reason.
+        }
     }
 
     override fun onError(ex: Exception) {
